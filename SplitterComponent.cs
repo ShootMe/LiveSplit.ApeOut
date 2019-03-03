@@ -71,7 +71,11 @@ namespace LiveSplit.ApeOut {
 			} else {
 				int level = mem.LevelNumber();
 				bool complete = mem.DiscComplete();
-				shouldSplit = (Model.CurrentState.Run.Count != 4 && level == lastLevel + 1) || (complete && !lastComplete && (level > 5 || mem.DiscTimer() > 100));
+				if (complete && level == 6) {
+					shouldSplit = mem.XPos() >= 5073;
+				} else {
+					shouldSplit = (Model.CurrentState.Run.Count != 4 && level == lastLevel + 1) || (complete && !lastComplete && (level > 5 || mem.DiscTimer() > 100));
+				}
 				lastLevel = level;
 				lastComplete = complete;
 			}
