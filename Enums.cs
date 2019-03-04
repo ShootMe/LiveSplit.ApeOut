@@ -2,7 +2,7 @@
 	public enum LogObject {
 		CurrentSplit,
 		Pointer,
-		Loading,
+		IsValid,
 		Visible,
 		LevelNumber,
 		Dead,

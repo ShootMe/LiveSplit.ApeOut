@@ -11,13 +11,12 @@ namespace LiveSplit.ApeOut {
 			LastHooked = DateTime.MinValue;
 		}
 
-		public long Pointer() {
-			return (long)GameplayDirector.Pointer;
+		public string Pointer() {
+			long pointer = (long)GameplayDirector.Pointer;
+			return pointer.ToString("X") + " - " + (pointer != 0 ? GameplayDirector.Read<long>(Program, 0xb8, 0x0).ToString("X") : string.Empty);
 		}
-		public bool Loading() {
-			if (!IsHooked) { return true; }
-
-			return false;
+		public bool IsValid() {
+			return IsHooked && LastHooked.AddSeconds(5) < DateTime.Now && GameplayDirector.Pointer != IntPtr.Zero && GameplayDirector.Read<long>(Program, 0xb8, 0x0) != 0;
 		}
 		public int LevelNumber() {
 			return GameplayDirector.Read<int>(Program, 0xb8, 0x0, 0x8c);

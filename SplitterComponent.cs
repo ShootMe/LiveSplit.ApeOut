@@ -65,10 +65,9 @@ namespace LiveSplit.ApeOut {
 		}
 		private void HandleSplits() {
 			bool shouldSplit = false;
-			bool loading = mem.Loading();
 
 			if (Model.CurrentState.CurrentPhase == TimerPhase.NotRunning) {
-				shouldSplit = mem.LastHooked.AddSeconds(5) < DateTime.Now && mem.Kills() == 0 && mem.Dead() && mem.HP() == 0 && mem.FloorNumber() == 0;
+				shouldSplit = mem.Kills() == 0 && mem.HP() == 0 && mem.FloorNumber() == 0 && mem.Dead() && mem.IsValid();
 			} else {
 				int level = mem.LevelNumber();
 				bool complete = mem.DiscComplete();
@@ -85,7 +84,7 @@ namespace LiveSplit.ApeOut {
 				lastComplete = complete;
 			}
 
-			Model.CurrentState.IsGameTimePaused = Model.CurrentState.CurrentPhase != TimerPhase.Running || loading;
+			Model.CurrentState.IsGameTimePaused = Model.CurrentState.CurrentPhase != TimerPhase.Running;
 
 			HandleSplit(shouldSplit, false);
 		}
@@ -116,8 +115,8 @@ namespace LiveSplit.ApeOut {
 
 					switch (key) {
 						case LogObject.CurrentSplit: curr = currentSplit.ToString(); break;
-						case LogObject.Pointer: curr = mem.Pointer().ToString("X"); break;
-						case LogObject.Loading: curr = mem.Loading().ToString(); break;
+						case LogObject.Pointer: curr = mem.Pointer().ToString(); break;
+						case LogObject.IsValid: curr = mem.IsValid().ToString(); break;
 						case LogObject.LevelNumber: curr = mem.LevelNumber().ToString(); break;
 						case LogObject.Dead: curr = mem.Dead().ToString(); break;
 						case LogObject.Kills: curr = mem.Kills().ToString(); break;
