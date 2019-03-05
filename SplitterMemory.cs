@@ -2,7 +2,10 @@
 using System.Diagnostics;
 namespace LiveSplit.ApeOut {
 	public partial class SplitterMemory {
-		private static ProgramPointer GameplayDirector = new ProgramPointer(AutoDeref.None, DerefType.Int64, "GameAssembly.dll", 0x1ba0198);
+		private static ProgramPointer GameplayDirector = new ProgramPointer(AutoDeref.None, DerefType.Int64, "GameAssembly.dll",
+			new ProgramSignature(PointerVersion.Steam2, 0x1baf0f0),
+			new ProgramSignature(PointerVersion.Steam1, 0x1ba0198)
+		);
 		public Process Program { get; set; }
 		public bool IsHooked { get; set; } = false;
 		public DateTime LastHooked;

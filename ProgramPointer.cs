@@ -2,7 +2,8 @@
 using System.Diagnostics;
 namespace LiveSplit.ApeOut {
 	public enum PointerVersion {
-		Steam
+		Steam1,
+		Steam2
 	}
 	public enum AutoDeref {
 		None,
@@ -15,40 +16,30 @@ namespace LiveSplit.ApeOut {
 	}
 	public class ProgramSignature {
 		public PointerVersion Version { get; set; }
-		public string Signature { get; set; }
-		public int Offset { get; set; }
-		public ProgramSignature(PointerVersion version, string signature, int offset) {
+		public int[] Offsets { get; set; }
+		public ProgramSignature(PointerVersion version, params int[] offsets) {
 			Version = version;
-			Signature = signature;
-			Offset = offset;
+			Offsets = offsets;
 		}
 		public override string ToString() {
-			return Version.ToString() + " - " + Signature;
+			return Version.ToString() + " - " + Offsets[0];
 		}
 	}
 	public class ProgramPointer {
 		private int lastID;
 		private DateTime lastTry;
 		private ProgramSignature[] signatures;
-		private int[] offsets;
-		private string asmName;
 		public IntPtr Pointer { get; private set; }
 		public PointerVersion Version { get; private set; }
 		public AutoDeref AutoDeref { get; private set; }
 		public DerefType DerefType { get; private set; }
+		public string AsmName { get; private set; }
 
-		public ProgramPointer(AutoDeref autoDeref, DerefType derefType, params ProgramSignature[] signatures) {
+		public ProgramPointer(AutoDeref autoDeref, DerefType derefType, string asmName, params ProgramSignature[] signatures) {
 			AutoDeref = autoDeref;
 			DerefType = derefType;
 			this.signatures = signatures;
-			lastID = -1;
-			lastTry = DateTime.MinValue;
-		}
-		public ProgramPointer(AutoDeref autoDeref, DerefType derefType, string asmName, params int[] offsets) {
-			AutoDeref = autoDeref;
-			DerefType = derefType;
-			this.offsets = offsets;
-			this.asmName = asmName;
+			AsmName = asmName;
 			lastID = -1;
 			lastTry = DateTime.MinValue;
 		}
@@ -118,40 +109,31 @@ namespace LiveSplit.ApeOut {
 			return Pointer;
 		}
 		private IntPtr GetVersionedFunctionPointer(Process program) {
-			if (signatures != null) {
-				MemorySearcher searcher = new MemorySearcher();
-				searcher.MemoryFilter = delegate (MemInfo info) {
-					return (info.State & 0x1000) != 0 && (info.Protect & 0x40) != 0 && (info.Protect & 0x100) == 0 && (long)info.RegionSize <= 0x100000;
-				};
-				for (int i = 0; i < signatures.Length; i++) {
-					ProgramSignature signature = signatures[i];
-
-					IntPtr ptr = searcher.FindSignature(program, signature.Signature);
-					if (ptr != IntPtr.Zero) {
-						Version = signature.Version;
-						return ptr + signature.Offset;
-					}
-				}
-				return IntPtr.Zero;
-			}
-
 			IntPtr baseAddress = program.MainModule.BaseAddress;
-			if (!string.IsNullOrEmpty(asmName)) {
+			if (!string.IsNullOrEmpty(AsmName)) {
 				Module64[] modules = program.Modules64();
 				for (int i = 0; i < modules.Length; i++) {
 					Module64 module = modules[i];
-					if (module.Name.Equals(asmName, StringComparison.OrdinalIgnoreCase)) {
+					if (module.Name.Equals(AsmName, StringComparison.OrdinalIgnoreCase)) {
 						baseAddress = module.BaseAddress;
 						break;
 					}
 				}
 			}
 
-			if (DerefType == DerefType.Int32) {
-				return (IntPtr)program.Read<uint>(baseAddress, offsets);
-			} else {
-				return (IntPtr)program.Read<ulong>(baseAddress, offsets);
+			for (int i = 0; i < signatures.Length; i++) {
+				ProgramSignature signature = signatures[i];
+				IntPtr pointer = IntPtr.Zero;
+				if (DerefType == DerefType.Int32) {
+					pointer = (IntPtr)program.Read<uint>(baseAddress, signature.Offsets);
+				} else {
+					pointer = (IntPtr)program.Read<ulong>(baseAddress, signature.Offsets);
+				}
+				if (pointer != IntPtr.Zero) {
+					return pointer;
+				}
 			}
+			return IntPtr.Zero;
 		}
 	}
 }
