@@ -121,7 +121,7 @@ namespace LiveSplit.ApeOut {
 			int hits = mem.HP();
 			if (hits < lastHits && !mem.Paused()) {
 				totalHits++;
-				if (hits == 0) {
+				if (hits <= 0) {
 					totalDeaths++;
 				}
 				changed = true;
