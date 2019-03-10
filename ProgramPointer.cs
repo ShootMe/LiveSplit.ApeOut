@@ -2,8 +2,7 @@
 using System.Diagnostics;
 namespace LiveSplit.ApeOut {
 	public enum PointerVersion {
-		Steam1,
-		Steam2
+		Steam
 	}
 	public enum AutoDeref {
 		None,

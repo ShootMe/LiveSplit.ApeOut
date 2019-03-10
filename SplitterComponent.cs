@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
@@ -16,8 +17,12 @@ namespace LiveSplit.ApeOut {
 		private static string LOGFILE = "_ApeOut.txt";
 		private Dictionary<LogObject, string> currentValues = new Dictionary<LogObject, string>();
 		private SplitterMemory mem;
-		private int currentSplit = -1, lastLogCheck = 0, lastLevel = 0;
-		private bool hasLog = false, lastComplete = false;
+		private TextComponent infoComponent;
+		private int currentSplit = -1, lastLogCheck, lastLevel;
+		private int totalKills, lastKills, currentKills, totalDeaths, totalHits, lastHits;
+		private bool hasLog = false, lastComplete = false, changed = true;
+		private List<string> infoList = new List<string>();
+		private string currentInfo;
 		private float apeOutXPos = 0;
 		private Thread updateLoop;
 		public SplitterComponent(LiveSplitState state) {
@@ -66,7 +71,8 @@ namespace LiveSplit.ApeOut {
 			bool shouldSplit = false;
 
 			if (Model.CurrentState.CurrentPhase == TimerPhase.NotRunning) {
-				shouldSplit = mem.Kills() == 0 && mem.HP() == 0 && mem.FloorNumber() == 0 && mem.Dead() && mem.IsValid();
+				ResetVariables();
+				shouldSplit = mem.Kills() == 0 && mem.HP() == 0 && mem.FloorNumber() == 0 && mem.HasBeenHit() && mem.IsValid();
 			} else {
 				int level = mem.LevelNumber();
 				bool complete = mem.DiscComplete();
@@ -83,9 +89,44 @@ namespace LiveSplit.ApeOut {
 				lastComplete = complete;
 			}
 
+			UpdateKills();
+			UpdateHits();
+
 			Model.CurrentState.IsGameTimePaused = Model.CurrentState.CurrentPhase != TimerPhase.Running;
 
 			HandleSplit(shouldSplit, false);
+		}
+		private void ResetVariables(bool onReset = false, bool onStart = false) {
+			currentSplit = onStart ? 1 : 0;
+			totalKills = 0;
+			lastKills = 0;
+			if (onReset || onStart) {
+				totalDeaths = 0;
+				totalHits = 0;
+				lastHits = 0;
+			}
+		}
+		private void UpdateKills() {
+			int kills = mem.Kills();
+			if (kills == 0 && lastKills > 0) {
+				totalKills += lastKills;
+			}
+			lastKills = kills;
+			if (currentKills != totalKills + kills) {
+				changed = true;
+				currentKills = totalKills + kills;
+			}
+		}
+		private void UpdateHits() {
+			int hits = mem.HP();
+			if (hits < lastHits && !mem.Paused()) {
+				totalHits++;
+				if (hits == 0) {
+					totalDeaths++;
+				}
+				changed = true;
+			}
+			lastHits = hits;
 		}
 		private void HandleSplit(bool shouldSplit, bool shouldReset = false) {
 			if (shouldReset) {
@@ -119,6 +160,9 @@ namespace LiveSplit.ApeOut {
 						case LogObject.LevelNumber: curr = mem.LevelNumber().ToString(); break;
 						case LogObject.Dead: curr = mem.Dead().ToString(); break;
 						case LogObject.Kills: curr = mem.Kills().ToString(); break;
+						case LogObject.Deaths: curr = mem.Deaths().ToString(); break;
+						case LogObject.Hit: curr = mem.HasBeenHit().ToString(); break;
+						case LogObject.NoControl: curr = mem.HasNoControl().ToString(); break;
 						case LogObject.HP: curr = mem.HP().ToString(); break;
 						case LogObject.Visible: curr = mem.Visible().ToString(); break;
 						case LogObject.Paused: curr = mem.Paused().ToString(); break;
@@ -155,9 +199,55 @@ namespace LiveSplit.ApeOut {
 			WriteLog(DateTime.Now.ToString(@"HH\:mm\:ss.fff") + (Model != null && Model.CurrentState.CurrentTime.RealTime.HasValue ? " | " + Model.CurrentState.CurrentTime.RealTime.Value.ToString("G").Substring(3, 11) : "") + ": " + data);
 		}
 		public void Update(IInvalidator invalidator, LiveSplitState lvstate, float width, float height, LayoutMode mode) {
+			if ((lastLogCheck & 63) == 0) {
+				IList<ILayoutComponent> components = lvstate.Layout.LayoutComponents;
+				infoComponent = null;
+				for (int i = components.Count - 1; i >= 0; i--) {
+					ILayoutComponent component = components[i];
+					if (component.Component is TextComponent) {
+						TextComponent text = (TextComponent)component.Component;
+						if (text.Settings.Text1.IndexOf("Deaths", StringComparison.OrdinalIgnoreCase) >= 0
+							|| text.Settings.Text1.IndexOf("Kills", StringComparison.OrdinalIgnoreCase) >= 0
+							|| text.Settings.Text1.IndexOf("Hits", StringComparison.OrdinalIgnoreCase) >= 0) {
+							infoComponent = text;
+							changed = true;
+							break;
+						}
+					}
+				}
+			}
+
+			if (infoComponent != null) {
+				if (changed) {
+					changed = false;
+					infoList.Clear();
+					int killIndex = infoComponent.Settings.Text1.IndexOf("Kills", StringComparison.OrdinalIgnoreCase);
+					int deathIndex = infoComponent.Settings.Text1.IndexOf("Deaths", StringComparison.OrdinalIgnoreCase);
+					int hitIndex = infoComponent.Settings.Text1.IndexOf("Hits", StringComparison.OrdinalIgnoreCase);
+
+					if (killIndex >= 0) {
+						infoList.Add(killIndex.ToString().PadLeft(3, '0') + currentKills.ToString());
+					}
+					if (deathIndex >= 0) {
+						infoList.Add(deathIndex.ToString().PadLeft(3, '0') + totalDeaths.ToString());
+					}
+					if (hitIndex >= 0) {
+						infoList.Add(hitIndex.ToString().PadLeft(3, '0') + totalHits.ToString());
+					}
+					infoList.Sort();
+
+					StringBuilder sb = new StringBuilder();
+					for (int i = 0; i < infoList.Count; i++) {
+						sb.Append(infoList[i].Substring(3)).Append(" / ");
+					}
+					sb.Length -= 3;
+					currentInfo = sb.ToString();
+				}
+				infoComponent.Settings.Text2 = currentInfo;
+			}
 		}
 		public void OnReset(object sender, TimerPhase e) {
-			currentSplit = 0;
+			ResetVariables(true);
 			WriteLog("---------Reset----------------------------------");
 		}
 		public void OnResume(object sender, EventArgs e) {
@@ -167,7 +257,7 @@ namespace LiveSplit.ApeOut {
 			WriteLog("---------Paused---------------------------------");
 		}
 		public void OnStart(object sender, EventArgs e) {
-			currentSplit = 1;
+			ResetVariables(false, true);
 			Model.CurrentState.SetGameTime(TimeSpan.Zero);
 			Model.CurrentState.IsGameTimePaused = true;
 			WriteLog("---------New Game " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + "-------------------------");

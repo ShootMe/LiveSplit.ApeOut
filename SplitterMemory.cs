@@ -3,9 +3,11 @@ using System.Diagnostics;
 namespace LiveSplit.ApeOut {
 	public partial class SplitterMemory {
 		private static ProgramPointer GameplayDirector = new ProgramPointer(AutoDeref.None, DerefType.Int64, "GameAssembly.dll",
-			new ProgramSignature(PointerVersion.Steam2, 0x1baf0f0),
-			new ProgramSignature(PointerVersion.Steam1, 0x1ba0198)
+			new ProgramSignature(PointerVersion.Steam, 0x1be1cd0)
 		);
+		//1st: new ProgramSignature(PointerVersion.Steam, 0x1ba0198)
+		//2nd: new ProgramSignature(PointerVersion.Steam, 0x1baf0f0)
+		//3rd: new ProgramSignature(PointerVersion.Steam, 0x1be1cd0)
 		public Process Program { get; set; }
 		public bool IsHooked { get; set; } = false;
 		public DateTime LastHooked;
@@ -27,6 +29,9 @@ namespace LiveSplit.ApeOut {
 		public int Kills() {
 			return GameplayDirector.Read<int>(Program, 0xb8, 0x0, 0xc4);
 		}
+		public int Deaths() {
+			return GameplayDirector.Read<int>(Program, 0xb8, 0x0, 0x1b0, 0x1c);
+		}
 		public int HP() {
 			return GameplayDirector.Read<int>(Program, 0xb8, 0x0, 0x28, 0x1c);
 		}
@@ -36,8 +41,17 @@ namespace LiveSplit.ApeOut {
 		public bool Paused() {
 			return !GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0x300);
 		}
+		public bool HasBeenHit() {
+			return !GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0x26a);
+		}
+		public bool HasKilled() {
+			return !GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0x269);
+		}
 		public bool Dead() {
-			return GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0x140) || !GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0x26a) || GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0xd1);
+			return GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0xd1);
+		}
+		public bool HasNoControl() {
+			return GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0x140);
 		}
 		public float DiscTimer() {
 			return GameplayDirector.Read<float>(Program, 0xb8, 0x0, 0x138);

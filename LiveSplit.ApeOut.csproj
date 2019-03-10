@@ -61,6 +61,9 @@
     <Reference Include="LiveSplit.Core">
       <HintPath>..\..\LiveSplit\LiveSplit.Core.dll</HintPath>
     </Reference>
+    <Reference Include="LiveSplit.Text">
+      <HintPath>..\..\LiveSplit\Components\LiveSplit.Text.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />

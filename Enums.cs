@@ -7,9 +7,12 @@
 		LevelNumber,
 		Dead,
 		Kills,
+		Deaths,
 		HP,
 		DiscComplete,
 		FloorNumber,
-		Paused
+		Paused,
+		Hit,
+		NoControl
 	}
 }
