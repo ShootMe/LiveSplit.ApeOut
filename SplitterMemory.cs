@@ -3,11 +3,12 @@ using System.Diagnostics;
 namespace LiveSplit.ApeOut {
 	public partial class SplitterMemory {
 		private static ProgramPointer GameplayDirector = new ProgramPointer(AutoDeref.None, DerefType.Int64, "GameAssembly.dll",
-			new ProgramSignature(PointerVersion.Steam, 0x1be1cd0)
+			new ProgramSignature(PointerVersion.Steam, 0x1bca8e8)
 		);
 		//1st: new ProgramSignature(PointerVersion.Steam, 0x1ba0198)
 		//2nd: new ProgramSignature(PointerVersion.Steam, 0x1baf0f0)
 		//3rd: new ProgramSignature(PointerVersion.Steam, 0x1be1cd0)
+		//4th: new ProgramSignature(PointerVersion.Steam, 0x1bca8e8)
 		public Process Program { get; set; }
 		public bool IsHooked { get; set; } = false;
 		public DateTime LastHooked;
@@ -39,7 +40,7 @@ namespace LiveSplit.ApeOut {
 			return GameplayDirector.Read<int>(Program, 0xb8, 0x0, 0x1a8);
 		}
 		public bool Paused() {
-			return !GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0x300);
+			return GameplayDirector.Read<byte>(Program, 0xb8, 0x0, 0x300) == 0;
 		}
 		public bool HasBeenHit() {
 			return !GameplayDirector.Read<bool>(Program, 0xb8, 0x0, 0x26a);
