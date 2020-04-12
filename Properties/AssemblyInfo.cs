@@ -1,5 +1,7 @@
 ﻿using LiveSplit.ApeOut;
+#if !Console
 using LiveSplit.UI.Components;
+#endif
 using System.Reflection;
 using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("LiveSplit.ApeOut")]
@@ -7,11 +9,11 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("LiveSplit.ApeOut")]
-[assembly: AssemblyCopyright("Copyright © 2019")]
+[assembly: AssemblyCopyright("Copyright © 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 [assembly: Guid("b3294e28-2bd4-4e39-92fa-e04a620d7eaf")]
-[assembly: AssemblyVersion("1.0.7.0")]
-[assembly: AssemblyFileVersion("1.0.7.0")]
-[assembly: ComponentFactory(typeof(SplitterFactory))]
+[assembly: AssemblyVersion("1.0.8.0")]
+[assembly: AssemblyFileVersion("1.0.8.0")]
+[assembly: ComponentFactory(typeof(Factory))]

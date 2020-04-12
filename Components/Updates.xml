@@ -1,5 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <updates>
+    <update version="1.0.8">
+        <files>
+            <file path="Components/LiveSplit.ApeOut.dll" status="changed"/>
+        </files>
+        <changelog>
+            <change> Improved autosplitter </change>
+            <change> Added ability to choose specific splits in settings </change>
+        </changelog>
+    </update>
     <update version="1.0.7">
         <files>
             <file path="Components/LiveSplit.ApeOut.dll" status="changed"/>

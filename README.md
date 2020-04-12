@@ -8,5 +8,4 @@ Autosplitter for the game Ape Out
   - Click Activate autosplitter
 
 ## Splits
-  - If you have 4 total splits it will split at the end of each full disc
-  - Otherwise it will split at the end of each track on each disc
+  - Can be set up in the settings menu

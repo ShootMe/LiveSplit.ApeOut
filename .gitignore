@@ -2,7 +2,8 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/.vs
 /bin
 /Components/LiveSplit.ApeOut.exe
+/.vs
 /obj
+/LiveSplit.ApeOut.csproj.user
