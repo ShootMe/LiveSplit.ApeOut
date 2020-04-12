@@ -99,10 +99,8 @@ namespace LiveSplit.ApeOut {
                     index++;
                     if (State.Run.Count == 4) {
                         Settings.Autosplits.Add(new Split() { Name = segment.Name, Type = SplitType.Album, Value = "Any" });
-                    } else if (State.Run.Count == 31) {
-                        Settings.Autosplits.Add(new Split() { Name = segment.Name, Type = SplitType.Track, Value = "Any" });
                     } else {
-                        Settings.Autosplits.Add(new Split() { Name = segment.Name, Type = SplitType.ManualSplit });
+                        Settings.Autosplits.Add(new Split() { Name = segment.Name, Type = SplitType.Track, Value = "Any" });
                     }
                     changed = true;
                 }
