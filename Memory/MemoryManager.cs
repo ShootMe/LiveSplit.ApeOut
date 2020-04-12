@@ -51,8 +51,8 @@ namespace LiveSplit.ApeOut {
             return Global.Read<int>(Program, 0xb8, 0x0, 0x28, 0x1c);
         }
         public Vector2 PlayerPosition() {
-            //Global.me.playerState.movement.myPos
-            return Global.Read<Vector2>(Program, 0xb8, 0x0, 0x28, 0x118, 0x120);
+            //Global.me.playerMovement.myPos
+            return Global.Read<Vector2>(Program, 0xb8, 0x0, 0x160, 0x120);
         }
         public bool Paused() {
             //Global.me.fixedNum
