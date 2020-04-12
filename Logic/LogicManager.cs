@@ -151,30 +151,26 @@ namespace LiveSplit.ApeOut {
             ShouldSplit = isValid && position == Vector2.ZERO && lastVector != Vector2.ZERO;
             lastVector = isValid ? position : Vector2.INVALID;
         }
-        private void CheckAlbum(Split split) {
-            SplitAlbumn album = Utility.GetEnumValue<SplitAlbumn>(split.Value);
-            switch (album) {
-                case SplitAlbumn.Any: CheckAlbum(Album.Any); break;
-                case SplitAlbumn.Album1: CheckAlbum(Album.Subject4); break;
-                case SplitAlbumn.Album2: CheckAlbum(Album.HighRise); break;
-                case SplitAlbumn.Album3: CheckAlbum(Album.Fugue); break;
-                case SplitAlbumn.Album4: CheckAlbum(Album.Adrift); break;
-                case SplitAlbumn.Single: CheckAlbum(Album.BreakIn); break;
-            }
-        }
-        private void CheckAlbum(Album album, Album currentAlbum = Album.Any) {
-            bool discComplete = Memory.DiscComplete();
-            if (currentAlbum == Album.Any) {
-                currentAlbum = (Album)(((int)Memory.Disc() / 2) * 2);
-            }
+        private void CheckAlbumTrack(Album album, int level) {
+            int currentLevel = Memory.Level();
+            if (level < 0) { level = lastIntValue; }
+
+            Album currentAlbum = (Album)(((int)Memory.Disc() / 2) * 2);
             if (album == Album.Any) { album = currentAlbum; }
 
-            if (album == Album.Adrift) {
-                CheckEndGame(discComplete);
+            bool checkComplete = album == Album.BreakIn || (album == Album.Adrift && level == 6) || level == 7;
+            if (checkComplete) {
+                bool discComplete = Memory.DiscComplete();
+                if (album == Album.Adrift) {
+                    CheckEndGame(discComplete);
+                } else {
+                    ShouldSplit = discComplete && !lastBoolValue && album == currentAlbum;
+                }
+                lastBoolValue = discComplete;
             } else {
-                ShouldSplit = discComplete && !lastBoolValue && album == currentAlbum;
+                ShouldSplit = level == lastIntValue && currentLevel > lastIntValue && album == currentAlbum;
             }
-            lastBoolValue = discComplete;
+            lastIntValue = currentLevel;
         }
         private void CheckEndGame(bool discComplete) {
             if (discComplete && Memory.Level() == 6) {
@@ -184,55 +180,53 @@ namespace LiveSplit.ApeOut {
                 }
                 ShouldSplit = shadow.X > lastVector.X;
             }
-            lastBoolValue = discComplete;
+        }
+        private void CheckAlbum(Split split) {
+            SplitAlbumn album = Utility.GetEnumValue<SplitAlbumn>(split.Value);
+            switch (album) {
+                case SplitAlbumn.Any: CheckAlbumTrack(Album.Any, -1); break;
+                case SplitAlbumn.Album1: CheckAlbumTrack(Album.Subject4, 7); break;
+                case SplitAlbumn.Album2: CheckAlbumTrack(Album.HighRise, 7); break;
+                case SplitAlbumn.Album3: CheckAlbumTrack(Album.Fugue, 7); break;
+                case SplitAlbumn.Album4: CheckAlbumTrack(Album.Adrift, 6); break;
+                case SplitAlbumn.Single: CheckAlbumTrack(Album.BreakIn, 0); break;
+            }
         }
         private void CheckTrack(Split split) {
             SplitTrack track = Utility.GetEnumValue<SplitTrack>(split.Value);
             switch (track) {
-                case SplitTrack.Any: CheckTrack(Album.Any, -1); break;
-                case SplitTrack.Album1_1Intro: CheckTrack(Album.Subject4, 0); break;
-                case SplitTrack.Album1_2HeatingUp: CheckTrack(Album.Subject4, 1); break;
-                case SplitTrack.Album1_3KnockKnock: CheckTrack(Album.Subject4, 2); break;
-                case SplitTrack.Album1_4FalseAlarm: CheckTrack(Album.Subject4, 3); break;
-                case SplitTrack.Album1_5PowerDown: CheckTrack(Album.Subject4, 4); break;
-                case SplitTrack.Album1_6LongShadows: CheckTrack(Album.Subject4, 5); break;
-                case SplitTrack.Album1_7Ding: CheckTrack(Album.Subject4, 6); break;
-                case SplitTrack.Album1_8BlownOut: CheckAlbum(Album.Subject4); break;
-                case SplitTrack.Album2_1ToTheTop: CheckTrack(Album.HighRise, 0); break;
-                case SplitTrack.Album2_2FullSwing: CheckTrack(Album.HighRise, 1); break;
-                case SplitTrack.Album2_3AimHigh: CheckTrack(Album.HighRise, 2); break;
-                case SplitTrack.Album2_4OverIt: CheckTrack(Album.HighRise, 3); break;
-                case SplitTrack.Album2_5ConcreteJungle: CheckTrack(Album.HighRise, 4); break;
-                case SplitTrack.Album2_6CircleBack: CheckTrack(Album.HighRise, 5); break;
-                case SplitTrack.Album2_7LowPressure: CheckTrack(Album.HighRise, 6); break;
-                case SplitTrack.Album2_8DownAndOut: CheckAlbum(Album.HighRise); break;
-                case SplitTrack.Album3_1Contact: CheckTrack(Album.Fugue, 0); break;
-                case SplitTrack.Album3_2Crossfire: CheckTrack(Album.Fugue, 1); break;
-                case SplitTrack.Album3_3RedAlert: CheckTrack(Album.Fugue, 2); break;
-                case SplitTrack.Album3_4Incoming: CheckTrack(Album.Fugue, 3); break;
-                case SplitTrack.Album3_5FireInTheHole: CheckTrack(Album.Fugue, 4); break;
-                case SplitTrack.Album3_6NoMansLand: CheckTrack(Album.Fugue, 5); break;
-                case SplitTrack.Album3_7Fury: CheckTrack(Album.Fugue, 6); break;
-                case SplitTrack.Album3_8BurnOut: CheckAlbum(Album.Fugue); break;
-                case SplitTrack.Album4_1HoldFast: CheckTrack(Album.Adrift, 0); break;
-                case SplitTrack.Album4_2RoughSeas: CheckTrack(Album.Adrift, 1); break;
-                case SplitTrack.Album4_3NoQuarter: CheckTrack(Album.Adrift, 2); break;
-                case SplitTrack.Album4_4HitTheDeck: CheckTrack(Album.Adrift, 3); break;
-                case SplitTrack.Album4_5AbandonShip: CheckTrack(Album.Adrift, 4); break;
-                case SplitTrack.Album4_6Wreck: CheckTrack(Album.Adrift, 5); break;
-                case SplitTrack.Album4_7Outro: CheckAlbum(Album.Adrift); break;
-            }
-        }
-        private void CheckTrack(Album album, int level) {
-            int currentLevel = Memory.Level();
-            Album currentAlbum = (Album)(((int)Memory.Disc() / 2) * 2);
-            if (album == Album.Any) { album = currentAlbum; }
-
-            if (album == Album.BreakIn || (level < 0 && currentLevel >= 6)) {
-                CheckAlbum(album, currentAlbum);
-            } else {
-                ShouldSplit = (level < 0 || level == lastIntValue) && currentLevel > lastIntValue && album == currentAlbum;
-                lastIntValue = currentLevel;
+                case SplitTrack.Any: CheckAlbumTrack(Album.Any, -1); break;
+                case SplitTrack.Album1_1Intro: CheckAlbumTrack(Album.Subject4, 0); break;
+                case SplitTrack.Album1_2HeatingUp: CheckAlbumTrack(Album.Subject4, 1); break;
+                case SplitTrack.Album1_3KnockKnock: CheckAlbumTrack(Album.Subject4, 2); break;
+                case SplitTrack.Album1_4FalseAlarm: CheckAlbumTrack(Album.Subject4, 3); break;
+                case SplitTrack.Album1_5PowerDown: CheckAlbumTrack(Album.Subject4, 4); break;
+                case SplitTrack.Album1_6LongShadows: CheckAlbumTrack(Album.Subject4, 5); break;
+                case SplitTrack.Album1_7Ding: CheckAlbumTrack(Album.Subject4, 6); break;
+                case SplitTrack.Album1_8BlownOut: CheckAlbumTrack(Album.Subject4, 7); break;
+                case SplitTrack.Album2_1ToTheTop: CheckAlbumTrack(Album.HighRise, 0); break;
+                case SplitTrack.Album2_2FullSwing: CheckAlbumTrack(Album.HighRise, 1); break;
+                case SplitTrack.Album2_3AimHigh: CheckAlbumTrack(Album.HighRise, 2); break;
+                case SplitTrack.Album2_4OverIt: CheckAlbumTrack(Album.HighRise, 3); break;
+                case SplitTrack.Album2_5ConcreteJungle: CheckAlbumTrack(Album.HighRise, 4); break;
+                case SplitTrack.Album2_6CircleBack: CheckAlbumTrack(Album.HighRise, 5); break;
+                case SplitTrack.Album2_7LowPressure: CheckAlbumTrack(Album.HighRise, 6); break;
+                case SplitTrack.Album2_8DownAndOut: CheckAlbumTrack(Album.HighRise, 7); break;
+                case SplitTrack.Album3_1Contact: CheckAlbumTrack(Album.Fugue, 0); break;
+                case SplitTrack.Album3_2Crossfire: CheckAlbumTrack(Album.Fugue, 1); break;
+                case SplitTrack.Album3_3RedAlert: CheckAlbumTrack(Album.Fugue, 2); break;
+                case SplitTrack.Album3_4Incoming: CheckAlbumTrack(Album.Fugue, 3); break;
+                case SplitTrack.Album3_5FireInTheHole: CheckAlbumTrack(Album.Fugue, 4); break;
+                case SplitTrack.Album3_6NoMansLand: CheckAlbumTrack(Album.Fugue, 5); break;
+                case SplitTrack.Album3_7Fury: CheckAlbumTrack(Album.Fugue, 6); break;
+                case SplitTrack.Album3_8BurnOut: CheckAlbumTrack(Album.Fugue, 7); break;
+                case SplitTrack.Album4_1HoldFast: CheckAlbumTrack(Album.Adrift, 0); break;
+                case SplitTrack.Album4_2RoughSeas: CheckAlbumTrack(Album.Adrift, 1); break;
+                case SplitTrack.Album4_3NoQuarter: CheckAlbumTrack(Album.Adrift, 2); break;
+                case SplitTrack.Album4_4HitTheDeck: CheckAlbumTrack(Album.Adrift, 3); break;
+                case SplitTrack.Album4_5AbandonShip: CheckAlbumTrack(Album.Adrift, 4); break;
+                case SplitTrack.Album4_6Wreck: CheckAlbumTrack(Album.Adrift, 5); break;
+                case SplitTrack.Album4_7Outro: CheckAlbumTrack(Album.Adrift, 6); break;
             }
         }
     }
