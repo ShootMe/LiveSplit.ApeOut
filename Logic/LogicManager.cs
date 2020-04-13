@@ -152,11 +152,23 @@ namespace LiveSplit.ApeOut {
             lastVector = isValid ? position : Vector2.INVALID;
         }
         private void CheckAlbumTrack(Album album, int level) {
-            int currentLevel = Memory.Level();
-            if (level < 0) { level = lastIntValue; }
-
             Album currentAlbum = (Album)(((int)Memory.Disc() / 2) * 2);
             if (album == Album.Any) { album = currentAlbum; }
+
+            int currentLevel = Memory.Level();
+            if (level < 0) {
+                if (level == -2) {
+                    if (album == Album.Adrift) {
+                        level = 6;
+                    } else if (album == Album.BreakIn) {
+                        level = 0;
+                    } else {
+                        level = 7;
+                    }
+                } else {
+                    level = lastIntValue;
+                }
+            }
 
             bool checkComplete = album == Album.BreakIn || (album == Album.Adrift && level == 6) || level == 7;
             if (checkComplete) {
@@ -184,7 +196,7 @@ namespace LiveSplit.ApeOut {
         private void CheckAlbum(Split split) {
             SplitAlbumn album = Utility.GetEnumValue<SplitAlbumn>(split.Value);
             switch (album) {
-                case SplitAlbumn.Any: CheckAlbumTrack(Album.Any, -1); break;
+                case SplitAlbumn.Any: CheckAlbumTrack(Album.Any, -2); break;
                 case SplitAlbumn.Album1: CheckAlbumTrack(Album.Subject4, 7); break;
                 case SplitAlbumn.Album2: CheckAlbumTrack(Album.HighRise, 7); break;
                 case SplitAlbumn.Album3: CheckAlbumTrack(Album.Fugue, 7); break;
