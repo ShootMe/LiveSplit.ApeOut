@@ -27,8 +27,8 @@ namespace LiveSplit.ApeOut {
             return Global.Read<IntPtr>(Program, 0xb8, 0x0) != IntPtr.Zero;
         }
         public Album Disc() {
-            //Global.me.healthMaster.world
-            return Global.Read<Album>(Program, 0xb8, 0x0, 0xa8, 0x18);
+            //Global.me.healthMaster.albumIndex
+            return Global.Read<Album>(Program, 0xb8, 0x0, 0xa8, 0x15c);
         }
         public int Level() {
             //Global.me.level

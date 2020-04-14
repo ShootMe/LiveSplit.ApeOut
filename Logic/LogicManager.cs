@@ -152,7 +152,7 @@ namespace LiveSplit.ApeOut {
             lastVector = isValid ? position : Vector2.INVALID;
         }
         private void CheckAlbumTrack(Album album, int level) {
-            Album currentAlbum = (Album)(((int)Memory.Disc() / 2) * 2);
+            Album currentAlbum = GetCurrentAlbum();
             if (album == Album.Any) { album = currentAlbum; }
 
             int currentLevel = Memory.Level();
@@ -172,26 +172,33 @@ namespace LiveSplit.ApeOut {
 
             bool checkComplete = album == Album.BreakIn || (album == Album.Adrift && level == 6) || level == 7;
             if (checkComplete) {
-                bool discComplete = Memory.DiscComplete();
-                if (album == Album.Adrift) {
-                    CheckEndGame(discComplete);
-                } else {
-                    ShouldSplit = discComplete && !lastBoolValue && album == currentAlbum;
+                if (splitLate == DateTime.MaxValue) {
+                    bool discComplete = Memory.DiscComplete();
+                    ShouldSplit = discComplete && !lastBoolValue && album == currentAlbum && Memory.TimeSinceLastKill() > 100;
+                    if (album == Album.Adrift && ShouldSplit) {
+                        splitLate = DateTime.Now.AddSeconds(1.6);
+                        ShouldSplit = false;
+                    }
+                    lastBoolValue = discComplete;
                 }
-                lastBoolValue = discComplete;
             } else {
                 ShouldSplit = level == lastIntValue && currentLevel > lastIntValue && album == currentAlbum;
             }
             lastIntValue = currentLevel;
         }
-        private void CheckEndGame(bool discComplete) {
-            if (discComplete && Memory.Level() == 6) {
-                Vector2 shadow = Memory.ShadowOrigin();
-                if (!lastBoolValue) {
-                    lastVector = shadow + 133;
-                }
-                ShouldSplit = shadow.X > lastVector.X;
+        private Album GetCurrentAlbum() {
+            Album album = Memory.Disc();
+            switch (album) {
+                case Album.HighRise:
+                case Album.HighRiseHard: return Album.HighRise;
+                case Album.Fugue:
+                case Album.FugueHard: return Album.Fugue;
+                case Album.Adrift:
+                case Album.AdriftHard: return Album.Adrift;
+                case Album.BreakIn:
+                case Album.BreakInHard: return Album.BreakIn;
             }
+            return Album.Subject4;
         }
         private void CheckAlbum(Split split) {
             SplitAlbumn album = Utility.GetEnumValue<SplitAlbumn>(split.Value);

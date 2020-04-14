@@ -1,12 +1,12 @@
 ﻿namespace LiveSplit.ApeOut {
     public enum Album {
         Subject4,
-        Subject4Hard,
         HighRise,
-        HighRiseHard,
         Fugue,
-        FugueHard,
         Adrift,
+        Subject4Hard,
+        HighRiseHard,
+        FugueHard,
         AdriftHard,
         BreakIn,
         BreakInHard,
