@@ -182,7 +182,7 @@ namespace LiveSplit.ApeOut {
                     lastBoolValue = discComplete;
                 }
             } else {
-                ShouldSplit = level == lastIntValue && currentLevel > lastIntValue && album == currentAlbum;
+                ShouldSplit = level == lastIntValue && currentLevel > lastIntValue && album == currentAlbum && Memory.Health() > 0;
             }
             lastIntValue = currentLevel;
         }

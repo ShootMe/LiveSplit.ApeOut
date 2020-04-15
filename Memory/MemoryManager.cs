@@ -62,10 +62,6 @@ namespace LiveSplit.ApeOut {
             //Global.me.killerAssigned
             return Global.Read<bool>(Program, 0xb8, 0x0, 0xd1);
         }
-        public Vector2 ShadowOrigin() {
-            //Global.me.shadowOrigin
-            return Global.Read<Vector2>(Program, 0xb8, 0x0, 0x174);
-        }
         public bool Uncaged() {
             //Global.me.uncaged
             return Global.Read<bool>(Program, 0xb8, 0x0, 0x90);
