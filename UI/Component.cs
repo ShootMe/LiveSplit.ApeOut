@@ -9,6 +9,7 @@ using System.Xml;
 using LiveSplit.Model;
 using LiveSplit.UI;
 using LiveSplit.UI.Components;
+using LiveSplit.View;
 namespace LiveSplit.ApeOut {
     public class Component : IComponent {
         public string ComponentName { get { return Factory.AutosplitterName; } }
@@ -22,6 +23,10 @@ namespace LiveSplit.ApeOut {
         private bool isAutosplitting = false;
         private TextComponent infoComponent;
         private DateTime lastInfoCheck = DateTime.MinValue;
+        private RunEditorDialog editorDialog;
+        private System.ComponentModel.BindingList<ISegment> segmentList;
+        private Split oldSplit;
+        private DateTime lastRemovedSplit;
 #if Console
         public static void Main(string[] args) {
             Component component = new Component(new LiveSplitState());
@@ -159,6 +164,16 @@ namespace LiveSplit.ApeOut {
             }
         }
         public void Update(IInvalidator invalidator, LiveSplitState lvstate, float width, float height, LayoutMode mode) {
+            if (editorDialog == null && Form.ActiveForm is RunEditorDialog runEditor) {
+                PropertyInfo info = typeof(RunEditorDialog).GetProperty("SegmentList", BindingFlags.Instance | BindingFlags.NonPublic);
+                segmentList = info.GetValue(runEditor) as System.ComponentModel.BindingList<ISegment>;
+                if (segmentList != null) {
+                    editorDialog = runEditor;
+                    segmentList.ListChanged += SegmentList_ListChanged;
+                    runEditor.FormClosed += RunEditor_FormClosed;
+                }
+            }
+
             if (DateTime.Now > lastInfoCheck) {
                 infoComponent = null;
                 IList<ILayoutComponent> components = Model.CurrentState.Layout.LayoutComponents;
@@ -198,6 +213,28 @@ namespace LiveSplit.ApeOut {
                 if (infoComponent.Settings.Text2 != info) {
                     infoComponent.Settings.Text2 = info;
                 }
+            }
+        }
+        private void RunEditor_FormClosed(object sender, FormClosedEventArgs e) {
+            editorDialog.FormClosed -= RunEditor_FormClosed;
+            editorDialog = null;
+            segmentList.ListChanged -= SegmentList_ListChanged;
+            segmentList = null;
+        }
+        private void SegmentList_ListChanged(object sender, System.ComponentModel.ListChangedEventArgs e) {
+            if (e.ListChangedType == System.ComponentModel.ListChangedType.ItemAdded) {
+                if (oldSplit != null && DateTime.Now < lastRemovedSplit) {
+                    oldSplit.Name = "splitChangedValue";
+                    userSettings.Settings.Autosplits.Insert(e.NewIndex + 1, oldSplit);
+                    oldSplit = null;
+                } else {
+                    userSettings.Settings.Autosplits.Insert(e.NewIndex + 1, new Split() { Name = "splitChangedValue", Type = SplitType.ManualSplit });
+                }
+            } else if (e.ListChangedType == System.ComponentModel.ListChangedType.ItemDeleted) {
+                oldSplit = userSettings.Settings.Autosplits[e.NewIndex + 1];
+                lastRemovedSplit = DateTime.Now.AddSeconds(0.1);
+                userSettings.Settings.Autosplits.RemoveAt(e.NewIndex + 1);
+                userSettings.Settings.Autosplits[userSettings.Settings.Autosplits.Count - 1].Name = "splitChangedValue";
             }
         }
         public Control GetSettingsControl(LayoutMode mode) { return userSettings; }

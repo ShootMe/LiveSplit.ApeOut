@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Windows.Forms;
 namespace LiveSplit.ApeOut {
 #if Console
     public interface IComponentFactory { }
@@ -14,6 +15,7 @@ namespace LiveSplit.ApeOut {
         }
         public Type ComponentFactoryClassType { get; }
     }
+    public class RunEditorDialog : Form { }
     public interface IComponent { }
     public enum TimerPhase {
         NotRunning = 0,
