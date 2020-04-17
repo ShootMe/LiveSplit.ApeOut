@@ -53,8 +53,10 @@ namespace LiveSplit.ApeOut {
             } else if (program.Id != lastID) {
                 Pointer = IntPtr.Zero;
                 lastID = program.Id;
-            } else if (Pointer != IntPtr.Zero && !currentFinder.VerifyPointer(program)) {
-                Pointer = IntPtr.Zero;
+            } else if (Pointer != IntPtr.Zero) {
+                IntPtr pointer = Pointer;
+                currentFinder.VerifyPointer(program, ref pointer);
+                Pointer = pointer;
             }
 
             if (Pointer == IntPtr.Zero && DateTime.Now > lastTry) {
@@ -98,17 +100,17 @@ namespace LiveSplit.ApeOut {
     public interface IFindPointer {
         IntPtr FindPointer(Process program, string asmName);
         bool FoundBaseAddress();
-        bool VerifyPointer(Process program);
+        void VerifyPointer(Process program, ref IntPtr pointer);
         PointerVersion Version { get; }
     }
     public class FindPointerSignature : IFindPointer {
         public PointerVersion Version { get; private set; }
-        private AutoDeref AutoDeref;
-        private string Signature;
+        private readonly AutoDeref AutoDeref;
+        private readonly string Signature;
+        private readonly MemorySearcher Searcher;
+        private readonly int[] Relative;
         private IntPtr BasePtr;
-        private MemorySearcher Searcher;
         private DateTime LastVerified;
-        private int[] Relative;
 
         public FindPointerSignature(PointerVersion version, AutoDeref autoDeref, string signature, params int[] relative) {
             Version = version;
@@ -123,17 +125,23 @@ namespace LiveSplit.ApeOut {
         public bool FoundBaseAddress() {
             return BasePtr != IntPtr.Zero;
         }
-        public bool VerifyPointer(Process program) {
+        public void VerifyPointer(Process program, ref IntPtr pointer) {
             DateTime now = DateTime.Now;
-            if (now > LastVerified) {
-                bool isValid = Searcher.VerifySignature(program, BasePtr, Signature);
-                LastVerified = now.AddSeconds(5);
-                if (!isValid) {
-                    BasePtr = IntPtr.Zero;
-                    return false;
+            if (now <= LastVerified) { return; }
+
+            bool isValid = Searcher.VerifySignature(program, BasePtr, Signature);
+            LastVerified = now.AddSeconds(1);
+            if (isValid) {
+                int offset = CalculateRelative(program);
+                IntPtr verify = ProgramPointer.DerefPointer(program, BasePtr + offset, AutoDeref);
+                if (verify != pointer) {
+                    pointer = verify;
                 }
+                return;
             }
-            return true;
+
+            BasePtr = IntPtr.Zero;
+            pointer = IntPtr.Zero;
         }
         public IntPtr FindPointer(Process program, string asmName) {
             return ProgramPointer.DerefPointer(program, GetPointer(program, asmName), AutoDeref);
@@ -187,8 +195,10 @@ namespace LiveSplit.ApeOut {
         public bool FoundBaseAddress() {
             return BasePtr != IntPtr.Zero;
         }
-        public bool VerifyPointer(Process program) {
-            return DateTime.Now < LastVerified;
+        public void VerifyPointer(Process program, ref IntPtr pointer) {
+            if (DateTime.Now > LastVerified) {
+                pointer = IntPtr.Zero;
+            }
         }
         public IntPtr FindPointer(Process program, string asmName) {
             if (string.IsNullOrEmpty(asmName)) {
