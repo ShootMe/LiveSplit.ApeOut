@@ -174,7 +174,7 @@ namespace LiveSplit.ApeOut {
             if (checkComplete) {
                 if (splitLate == DateTime.MaxValue) {
                     bool discComplete = Memory.DiscComplete();
-                    ShouldSplit = discComplete && !lastBoolValue && album == currentAlbum && Memory.TimeSinceLastKill() > 100;
+                    ShouldSplit = discComplete && !lastBoolValue && album == currentAlbum && Memory.TimeSinceLastKill() > 30;
                     if (album == Album.Adrift && ShouldSplit) {
                         splitLate = DateTime.Now.AddSeconds(1.6);
                         ShouldSplit = false;
