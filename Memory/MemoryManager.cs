@@ -9,6 +9,11 @@ namespace LiveSplit.ApeOut {
         public Process Program { get; set; }
         public bool IsHooked { get; set; }
         public DateTime LastHooked { get; set; }
+        private bool lastTitling = false;
+        private int lastGuards;
+        private IntPtr globalPtr;
+        private Vector2 lastPos;
+        private bool setPos;
 
         public MemoryManager() {
             LastHooked = DateTime.MinValue;
@@ -18,59 +23,87 @@ namespace LiveSplit.ApeOut {
                 $"GLB: {(ulong)Global.GetPointer(Program):X} "
             );
         }
-        public bool AllPointersFound() {
-            return Global.GetPointer(Program) != IntPtr.Zero;
-        }
         public bool IsLoading() {
+            //Global.me
+            globalPtr = Global.Read<IntPtr>(Program, 0xb8, 0x0);
+
+            bool titling = Titling();
+            int guards = titling ? GuardsOnScreen() : 0;
+            Vector2 playerPos = titling ? PlayerPosition() : Vector2.ZERO;
+
+            if (titling != lastTitling) {
+                if (titling & Paused()) {
+                    lastPos = playerPos;
+                    setPos = true;
+                } else {
+                    lastGuards = 0;
+                }
+            }
+
+            if (titling && playerPos != lastPos && setPos) {
+                lastGuards = guards;
+                lastPos = playerPos;
+                setPos = false;
+            }
+
+            lastTitling = titling;
+
+            return titling && guards == lastGuards && !setPos;
+        }
+        public int GuardsOnScreen() {
             //Global.me.guardsOnScreen
-            return Global.Read<int>(Program, 0xb8, 0x0, 0x13c) == 0;
+            return Program.Read<int>(globalPtr, 0x13c);
+        }
+        public bool Titling() {
+            //Global.me.titling
+            return Program.Read<bool>(globalPtr, 0x140);
         }
         public bool IsValid() {
-            return Global.Read<IntPtr>(Program, 0xb8, 0x0) != IntPtr.Zero;
+            return globalPtr != IntPtr.Zero;
         }
         public Album Disc() {
             //Global.me.healthMaster.albumIndex
-            return Global.Read<Album>(Program, 0xb8, 0x0, 0xa8, 0x15c);
+            return Program.Read<Album>(globalPtr, 0xa8, 0x15c);
         }
         public int Level() {
             //Global.me.level
-            return Global.Read<int>(Program, 0xb8, 0x0, 0x8c);
+            return Program.Read<int>(globalPtr, 0x8c);
         }
         public int FloorNumber() {
             //Global.me.curFloor
-            return Global.Read<int>(Program, 0xb8, 0x0, 0x1a8);
+            return Program.Read<int>(globalPtr, 0x1a8);
         }
         public float TimeSinceLastKill() {
             //Global.me.timeSinceLastKill
-            return Global.Read<float>(Program, 0xb8, 0x0, 0x138);
+            return Program.Read<float>(globalPtr, 0x138);
         }
         public int Kills() {
             //Global.me.guardsKilled
-            return Global.Read<int>(Program, 0xb8, 0x0, 0xc4);
+            return Program.Read<int>(globalPtr, 0xc4);
         }
         public int Health() {
             //Global.me.playerState.health
-            return Global.Read<int>(Program, 0xb8, 0x0, 0x28, 0x1c);
+            return Program.Read<int>(globalPtr, 0x28, 0x1c);
         }
         public Vector2 PlayerPosition() {
             //Global.me.playerMovement.myPos
-            return Global.Read<Vector2>(Program, 0xb8, 0x0, 0x160, 0x120);
+            return Program.Read<Vector2>(globalPtr, 0x160, 0x120);
         }
         public bool Paused() {
             //Global.me.fixedNum
-            return Global.Read<int>(Program, 0xb8, 0x0, 0x300) == 0;
+            return Program.Read<int>(globalPtr, 0x300) == 0;
         }
         public bool Dead() {
             //Global.me.killerAssigned
-            return Global.Read<bool>(Program, 0xb8, 0x0, 0xd1);
+            return Program.Read<bool>(globalPtr, 0xd1);
         }
         public bool Uncaged() {
             //Global.me.uncaged
-            return Global.Read<bool>(Program, 0xb8, 0x0, 0x90);
+            return Program.Read<bool>(globalPtr, 0x90);
         }
         public bool DiscComplete() {
             //Global.me.dontPause
-            return Global.Read<bool>(Program, 0xb8, 0x0, 0x318);
+            return Program.Read<bool>(globalPtr, 0x318);
         }
         public bool HookProcess() {
             IsHooked = Program != null && !Program.HasExited;

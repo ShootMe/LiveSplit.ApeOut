@@ -17,7 +17,9 @@ namespace LiveSplit.ApeOut {
         Dead,
         Uncaged,
         DiscComplete,
-        NewGame
+        NewGame,
+        Titling,
+        Guards
     }
     public class LogManager {
         public const string LOG_FILE = "ApeOut.txt";
@@ -73,6 +75,7 @@ namespace LiveSplit.ApeOut {
             lock (currentValues) {
                 DateTime date = DateTime.Now;
                 bool updateLog = true;
+                bool isLoading = logic.Memory.IsLoading();
 
                 foreach (LogObject key in Enum.GetValues(typeof(LogObject))) {
                     string previous = currentValues[key];
@@ -82,7 +85,9 @@ namespace LiveSplit.ApeOut {
                         case LogObject.CurrentSplit: current = $"{logic.CurrentSplit} ({GetCurrentSplit(logic, settings)})"; break;
                         case LogObject.Pointers: current = logic.Memory.GamePointers(); break;
                         case LogObject.Version: current = MemoryManager.Version.ToString(); break;
-                        case LogObject.Loading: current = logic.Memory.IsLoading().ToString(); break;
+                        case LogObject.Loading: current = isLoading.ToString(); break;
+                        case LogObject.Titling: current = logic.Memory.Titling().ToString(); break;
+                        case LogObject.Guards: current = logic.Memory.GuardsOnScreen().ToString(); break;
                         case LogObject.IsValid: current = updateLog ? logic.Memory.IsValid().ToString() : previous; break;
                         case LogObject.Disc: current = updateLog ? logic.Memory.Disc().ToString() : previous; break;
                         case LogObject.Level: current = updateLog ? logic.Memory.Level().ToString() : previous; break;
