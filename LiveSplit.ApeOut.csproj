@@ -5,11 +5,11 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{B3294E28-2BD4-4E39-92FA-E04A620C7E7F}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LiveSplit.ApeOut</RootNamespace>
     <AssemblyName>LiveSplit.ApeOut</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -76,14 +76,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LiveSplit.Core">
-      <HintPath>..\..\LiveSplit\LiveSplit.Core.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\Programs\LiveSplit\LiveSplit.Core.dll</HintPath>
     </Reference>
     <Reference Include="LiveSplit.Text">
-      <HintPath>..\..\LiveSplit\Components\LiveSplit.Text.dll</HintPath>
+      <HintPath>..\..\Programs\LiveSplit\Components\LiveSplit.Text.dll</HintPath>
     </Reference>
     <Reference Include="LiveSplit.View">
-      <HintPath>..\..\LiveSplit\LiveSplit.View.dll</HintPath>
+      <HintPath>..\..\Programs\LiveSplit\LiveSplit.View.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -92,8 +91,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="UpdateManager">
-      <HintPath>..\..\LiveSplit\UpdateManager.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\Programs\LiveSplit\UpdateManager.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -165,8 +163,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) $(ProjectDir)Components\$(TargetFileName)
-copy $(TargetPath) ..\..\..\LiveSplit\Components\$(TargetFileName)</PostBuildEvent>
+    <PostBuildEvent>copy $(TargetPath) $(ProjectDir)Components\$(TargetFileName)</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

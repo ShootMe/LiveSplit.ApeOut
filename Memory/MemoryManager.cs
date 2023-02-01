@@ -22,7 +22,8 @@ namespace LiveSplit.ApeOut {
             return Global.GetPointer(Program) != IntPtr.Zero;
         }
         public bool IsLoading() {
-            return false;
+            //Global.me.guardsOnScreen
+            return Global.Read<int>(Program, 0xb8, 0x0, 0x13c) == 0;
         }
         public bool IsValid() {
             return Global.Read<IntPtr>(Program, 0xb8, 0x0) != IntPtr.Zero;
@@ -82,12 +83,6 @@ namespace LiveSplit.ApeOut {
                 if (Program != null && !Program.HasExited) {
                     MemoryReader.Update64Bit(Program);
                     MemoryManager.Version = PointerVersion.All;
-                    //Module64 module = Program.MainModule64();
-                    //if (module != null) {
-                    //    switch (module.MemorySize) {
-                    //        case 77430784: MemoryManager.Version = PointerVersion.V2; break;
-                    //    }
-                    //}
                     IsHooked = true;
                 }
             }
