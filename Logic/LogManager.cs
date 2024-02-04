@@ -18,8 +18,7 @@ namespace LiveSplit.ApeOut {
         Uncaged,
         DiscComplete,
         NewGame,
-        Titling,
-        Guards
+        Titling
     }
     public class LogManager {
         public const string LOG_FILE = "ApeOut.txt";
@@ -87,7 +86,6 @@ namespace LiveSplit.ApeOut {
                         case LogObject.Version: current = MemoryManager.Version.ToString(); break;
                         case LogObject.Loading: current = isLoading.ToString(); break;
                         case LogObject.Titling: current = logic.Memory.Titling().ToString(); break;
-                        case LogObject.Guards: current = logic.Memory.GuardsOnScreen().ToString(); break;
                         case LogObject.IsValid: current = updateLog ? logic.Memory.IsValid().ToString() : previous; break;
                         case LogObject.Disc: current = updateLog ? logic.Memory.Disc().ToString() : previous; break;
                         case LogObject.Level: current = updateLog ? logic.Memory.Level().ToString() : previous; break;

@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Text;
 namespace LiveSplit.ApeOut {
     public partial class MemoryManager {
         private static ProgramPointer Global = new ProgramPointer("GameAssembly.dll",
             new FindPointerSignature(PointerVersion.All, AutoDeref.Single, "4533C94C8BC3488BD7488BC84C8BF0E8????????4885F60F84????????4C8B05????????498BD6488BCEE8????????488B05????????488B88B8000000488939488B0D????????F681????000001740E4439B9", 0x32, 0x0),
             new FindPointerSignature(PointerVersion.All, AutoDeref.Single, "33D2488BCBE8????????4C8B05????????4C8BC84885C0750433D2EB24488B00", 13, 0));
+        private static ProgramPointer HealthMaster = new ProgramPointer("GameAssembly.dll",
+            new FindPointerSignature(PointerVersion.All, AutoDeref.Single, "4533C94533C0488BD333C9E8????????84C00F85????????4889742460488B05????????4533C0", 32, 0),
+            new FindPointerSignature(PointerVersion.All, AutoDeref.Single, "4533C033D2488BCBE8????????84C00F85????????4889742460488B05????????488BD7488B88B8000000488939", 29, 0));
         public static PointerVersion Version { get; set; } = PointerVersion.All;
         public Process Program { get; set; }
         public bool IsHooked { get; set; }
@@ -24,6 +28,10 @@ namespace LiveSplit.ApeOut {
             );
         }
         public bool IsLoading() {
+            //HealthMaster.me
+            IntPtr healthPtr = HealthMaster.Read<IntPtr>(Program, 0xb8, 0x0);
+            if (healthPtr == IntPtr.Zero) { return true; }
+
             //Global.me
             globalPtr = Global.Read<IntPtr>(Program, 0xb8, 0x0);
 
@@ -49,6 +57,23 @@ namespace LiveSplit.ApeOut {
             lastTitling = titling;
 
             return titling && guards == lastGuards && !setPos;
+        }
+        public string MapLines() {
+            StringBuilder sb = new StringBuilder();
+            //Global.me.mapGenerator.mapLines
+            IntPtr ptr = Program.Read<IntPtr>(globalPtr, 0x188, 0x70);
+            int count = Program.Read<int>(ptr, 0x18);
+            for (int i = 0; i < count; i++) {
+                string line = Program.ReadString(ptr, 0x20 + (i * 8), 0x0);
+
+                if (line.IndexOf('*') >= 0 || line.IndexOf('H') >= 0 || (line.IndexOf('S') >= 0 && line.Length > 4)) {
+                    byte[] data = Encoding.Unicode.GetBytes(line.Replace("*", "2").Replace("H", "2").Replace("S", "M"));
+                    Program.Write(ptr, data, 0x20 + (i * 8), 0x14);
+                }
+
+                sb.AppendLine(line);
+            }
+            return sb.ToString();
         }
         public int GuardsOnScreen() {
             //Global.me.guardsOnScreen
@@ -110,6 +135,7 @@ namespace LiveSplit.ApeOut {
             if (!IsHooked && DateTime.Now > LastHooked.AddSeconds(1)) {
                 LastHooked = DateTime.Now;
 
+                globalPtr = IntPtr.Zero;
                 Process[] processes = Process.GetProcessesByName("ApeOut");
                 Program = processes != null && processes.Length > 0 ? processes[0] : null;
 

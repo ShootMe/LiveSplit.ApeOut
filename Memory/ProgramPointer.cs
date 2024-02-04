@@ -149,12 +149,12 @@ namespace LiveSplit.ApeOut {
         private IntPtr GetPointer(Process program, string asmName) {
             if (string.IsNullOrEmpty(asmName)) {
                 Searcher.MemoryFilter = delegate (MemInfo info) {
-                    return (info.State & 0x1000) != 0 && (info.Protect & 0x40) != 0 && (info.Protect & 0x100) == 0;
+                    return (info.State & 0x1000) != 0 && (info.Type & 0x20000) != 0 && (info.Protect & 0xe0) != 0 && (info.Protect & 0x101) == 0;
                 };
             } else {
                 Tuple<IntPtr, IntPtr> range = ProgramPointer.GetAddressRange(program, asmName);
                 Searcher.MemoryFilter = delegate (MemInfo info) {
-                    return (ulong)info.BaseAddress >= (ulong)range.Item1 && (ulong)info.BaseAddress <= (ulong)range.Item2 && (info.State & 0x1000) != 0 && (info.Protect & 0x20) != 0 && (info.Protect & 0x100) == 0;
+                    return (ulong)info.BaseAddress >= (ulong)range.Item1 && (ulong)info.BaseAddress <= (ulong)range.Item2 && (info.State & 0x1000) != 0 && (info.Type & 0x01000000) != 0 && (info.Protect & 0xe0) != 0 && (info.Protect & 0x101) == 0;
                 };
             }
 
